@@ -15,8 +15,8 @@ RUN python -m spacy download en_core_web_sm
 
 COPY . .
 
-# Railway sets PORT automatically; default to 8000 for local/docker-compose use
+# Railway injects PORT at runtime; default 8000 for local/docker-compose
 ENV PORT=8000
-EXPOSE $PORT
+EXPOSE 8000
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
