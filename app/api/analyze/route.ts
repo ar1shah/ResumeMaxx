@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { runAnalysis } from '@/lib/analyzer/pipeline'
-import { extractTextFromPdf } from '@/lib/analyzer/pdf'
 import { proxyToPython } from '@/lib/analyzer/python-proxy'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024   // 5 MB
 const MAX_TEXT_CHARS = 50_000
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL?.replace(/\/$/, '')
+
+/** pdf-parse pulls in pdf.js (DOMMatrix) — only load for local TS fallback, never on Vercel+Python. */
+async function extractPdfLocally(buffer: Buffer): Promise<string> {
+  const { extractTextFromPdf } = await import('@/lib/analyzer/pdf')
+  return extractTextFromPdf(buffer)
+}
+
+async function runTsAnalysis(resumeText: string, jdText: string) {
+  const { runAnalysis } = await import('@/lib/analyzer/pipeline')
+  return runAnalysis(resumeText, jdText)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +38,7 @@ export async function POST(req: NextRequest) {
 
         if (!PYTHON_API_URL) {
           const buffer = Buffer.from(await file.arrayBuffer())
-          resumeText = await extractTextFromPdf(buffer)
+          resumeText = await extractPdfLocally(buffer)
         }
       } else {
         resumeText = (form.get('resumeText') as string | null) ?? ''
@@ -71,24 +80,34 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(result)
       } catch (proxyErr) {
         const msg = proxyErr instanceof Error ? proxyErr.message : ''
-        // Don't mask auth/config mistakes with a silent fallback
         if (msg.includes('Unauthorized') || msg.includes('401')) {
           return NextResponse.json(
-            { error: 'Analysis service rejected the request. Check PYTHON_API_SECRET matches Railway API_SECRET.' },
+            {
+              error:
+                'Analysis service rejected the request. Check PYTHON_API_SECRET matches Railway API_SECRET.',
+            },
             { status: 502 },
           )
         }
-        console.error('Python API proxy failed, using TS fallback:', proxyErr)
+
+        // TS fallback for paste only — pdf-parse cannot run on Vercel serverless
         if (uploadedFile && !resumeText) {
-          const buffer = Buffer.from(await uploadedFile.arrayBuffer())
-          resumeText = await extractTextFromPdf(buffer)
+          return NextResponse.json(
+            {
+              error:
+                'PDF upload is unavailable while the analysis service is down. Paste your resume as text, or try again shortly.',
+            },
+            { status: 502 },
+          )
         }
-        const result = await runAnalysis(resumeText, jdText)
+
+        console.error('Python API proxy failed, using TS fallback:', proxyErr)
+        const result = await runTsAnalysis(resumeText, jdText)
         return NextResponse.json(result)
       }
     }
 
-    const result = await runAnalysis(resumeText, jdText)
+    const result = await runTsAnalysis(resumeText, jdText)
     return NextResponse.json(result)
   } catch (err) {
     console.error('/api/analyze error:', err)
