@@ -20,9 +20,12 @@ def tfidf_score(doc_a: str, doc_b: str) -> float:
         sublinear_tf=True,
         min_df=1,
     )
-    tfidf = vectorizer.fit_transform([doc_a, doc_b])
-    score = float(cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0])
-    # Clamp to [0, 1] to handle any floating-point noise
+    try:
+        tfidf = vectorizer.fit_transform([doc_a, doc_b])
+        score = float(cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0])
+    except ValueError:
+        # sklearn raises this when stop-word filtering leaves an empty vocabulary
+        return 0.0
     return max(0.0, min(1.0, score))
 
 
@@ -52,9 +55,12 @@ def keyword_gap(resume_text: str, jd_text: str) -> list[str]:
         ngram_range=(1, 1),
         min_df=1,
     )
-    vectorizer.fit([jd_text])
-    terms = vectorizer.get_feature_names_out()
-    scores = vectorizer.transform([jd_text]).toarray()[0]
+    try:
+        vectorizer.fit([jd_text])
+        terms = vectorizer.get_feature_names_out()
+        scores = vectorizer.transform([jd_text]).toarray()[0]
+    except ValueError:
+        return []
 
     resume_lower = resume_text.lower()
     missing = [

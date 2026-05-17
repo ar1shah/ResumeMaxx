@@ -4,9 +4,12 @@ from functools import lru_cache
 from app.models.schemas import BulletFeedback
 
 
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+
 @lru_cache(maxsize=1)
 def _load_verbs() -> frozenset[str]:
-    verbs_path = Path(__file__).parent.parent.parent / "data" / "action_verbs.txt"
+    verbs_path = _DATA_DIR / "action_verbs.txt"
     return frozenset(
         line.strip().lower()
         for line in verbs_path.read_text().splitlines()

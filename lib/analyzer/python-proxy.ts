@@ -1,47 +1,55 @@
 import type { AnalysisResult } from '@/types/analysis'
 
-const BASE_URL = process.env.PYTHON_API_URL!
-const SECRET = process.env.PYTHON_API_SECRET ?? ''
+function baseUrl(): string {
+  return (process.env.PYTHON_API_URL ?? '').replace(/\/$/, '')
+}
+
+function parseErrorBody(body: unknown, status: number): string {
+  if (!body || typeof body !== 'object') return `Analysis service error (${status})`
+  const b = body as { detail?: unknown; error?: string }
+  if (typeof b.error === 'string') return b.error
+  if (typeof b.detail === 'string') return b.detail
+  if (Array.isArray(b.detail)) {
+    return b.detail
+      .map((d) => (typeof d === 'object' && d && 'msg' in d ? String((d as { msg: string }).msg) : String(d)))
+      .join('; ')
+  }
+  return `Analysis service error (${status})`
+}
 
 /**
- * Forward an analysis request to the Python FastAPI service.
- * Accepts either multipart FormData (PDF upload path) or a JSON body
- * (paste path) and returns the parsed AnalysisResult.
+ * Forward an analysis request to the Python FastAPI service on Railway.
+ * Paste mode uses JSON (reliable on Vercel serverless); PDF upload uses multipart.
  */
 export async function proxyToPython(
   body: FormData | { resumeText: string; jdText: string },
 ): Promise<AnalysisResult> {
+  const url = `${baseUrl()}/analyze`
   const headers: Record<string, string> = {}
-  if (SECRET) {
-    headers['x-api-secret'] = SECRET
-  }
+  const secret = process.env.PYTHON_API_SECRET ?? ''
+  if (secret) headers['x-api-secret'] = secret
 
-  let fetchBody: BodyInit
+  let fetchInit: RequestInit
+
   if (body instanceof FormData) {
-    // Let fetch set Content-Type with the correct boundary
-    fetchBody = body
+    fetchInit = { method: 'POST', headers, body }
   } else {
-    // Python route accepts both JSON and form; we use multipart form here
-    // to keep a single code path on the Python side.
-    const form = new FormData()
-    form.append('resumeText', body.resumeText)
-    form.append('jdText', body.jdText)
-    fetchBody = form
+    headers['Content-Type'] = 'application/json'
+    fetchInit = {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    }
   }
 
-  const res = await fetch(`${BASE_URL}/analyze`, {
-    method: 'POST',
-    headers,
-    body: fetchBody,
-    // 25s — gives Python time to cold-start spaCy on Railway free tier
+  const res = await fetch(url, {
+    ...fetchInit,
     signal: AbortSignal.timeout(25_000),
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(
-      (err as { detail?: string }).detail ?? `Python API error ${res.status}`,
-    )
+    const errBody = await res.json().catch(() => ({}))
+    throw new Error(parseErrorBody(errBody, res.status))
   }
 
   return res.json() as Promise<AnalysisResult>

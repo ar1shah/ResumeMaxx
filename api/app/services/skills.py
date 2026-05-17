@@ -13,9 +13,12 @@ except Exception:
     _NLP = None
 
 
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+
 @lru_cache(maxsize=1)
 def _load_vocab() -> frozenset[str]:
-    vocab_path = Path(__file__).parent.parent.parent / "data" / "skills_vocabulary.txt"
+    vocab_path = _DATA_DIR / "skills_vocabulary.txt"
     return frozenset(
         line.strip().lower()
         for line in vocab_path.read_text().splitlines()

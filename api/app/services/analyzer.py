@@ -20,14 +20,15 @@ def run_analysis(resume_text: str, jd_text: str) -> AnalysisResult:
     bullet_feedback = audit_bullets(experience_text)
 
     return AnalysisResult(
-        **{
-            "overallScore": overall_score,
-            "sectionScores": [SectionScore(**{"section": s["section"], "score": s["score"]}) for s in raw_section_scores],
-            "missingKeywords": missing_keywords,
-            "bulletFeedback": bullet_feedback,
-            "resumeSkillCount": resume_skill_count,
-            "jdSkillCount": jd_skill_count,
-            "matchedSkills": matched_skills,
-            "missingSkills": missing_skills,
-        }
+        overall_score=overall_score,
+        section_scores=[
+            SectionScore(section=s["section"], score=float(s["score"]))
+            for s in raw_section_scores
+        ],
+        missing_keywords=missing_keywords,
+        bullet_feedback=bullet_feedback,
+        resume_skill_count=resume_skill_count,
+        jd_skill_count=jd_skill_count,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
     )

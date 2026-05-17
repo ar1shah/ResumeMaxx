@@ -2,11 +2,20 @@ import type { AnalysisResult } from '@/types/analysis'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 
+function parseApiError(body: unknown, status: number): string {
+  if (body && typeof body === 'object') {
+    const b = body as { error?: string; detail?: string }
+    if (typeof b.error === 'string') return b.error
+    if (typeof b.detail === 'string') return b.detail
+  }
+  return `HTTP ${status}`
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, init)
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`)
+    throw new Error(parseApiError(body, res.status))
   }
   return res.json() as Promise<T>
 }
