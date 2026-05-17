@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import path from 'path'
+import { extractJd } from './jd-extract'
 
 let _vocab: Set<string> | null = null
 
@@ -39,4 +40,46 @@ export function compareSkills(
   const missing = jdSkills.filter(s => !resumeSkills.has(s))
 
   return { matched, missing }
+}
+
+export interface ClassifiedJdSkills {
+  required: string[]
+  niceToHave: string[]
+}
+
+export function classifyJdSkills(jdText: string): ClassifiedJdSkills {
+  const jdExtract = extractJd(jdText)
+  const reqSkills = new Set(extractSkills(jdExtract.requirementsText))
+  const niceFromSection = new Set(
+    extractSkills(jdExtract.niceToHaveText).filter(s => !reqSkills.has(s)),
+  )
+
+  // Skills in the full JD not placed in either bucket → required (conservative)
+  const fullSkills = extractSkills(jdExtract.fullText)
+  const extraReq = fullSkills.filter(s => !reqSkills.has(s) && !niceFromSection.has(s))
+
+  return {
+    required: [...new Set([...reqSkills, ...extraReq])].sort(),
+    niceToHave: [...niceFromSection].sort(),
+  }
+}
+
+export function computeSkillFit(
+  resumeText: string,
+  classified: ClassifiedJdSkills,
+): number {
+  const resumeSkills = new Set(extractSkills(resumeText))
+  const { required, niceToHave } = classified
+
+  if (required.length === 0 && niceToHave.length === 0) {
+    return 70 // neutral: JD has no detectable skills
+  }
+
+  const reqMatched = required.filter(s => resumeSkills.has(s)).length
+  const niceMatched = niceToHave.filter(s => resumeSkills.has(s)).length
+
+  const numerator = reqMatched + 0.5 * niceMatched
+  const denominator = required.length + 0.5 * niceToHave.length
+
+  return Math.min(100, Math.round((numerator / denominator) * 100))
 }

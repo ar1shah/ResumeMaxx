@@ -68,15 +68,58 @@ export function tfidfScore(docA: string, docB: string): number {
 
 export function scoreSections(
   sections: Record<string, string>,
-  jdText: string,
+  referenceText: string,
 ): Array<{ section: string; score: number }> {
   return Object.entries(sections)
     .filter(([, content]) => content.trim().length > 20)
     .map(([section, content]) => ({
       section,
-      score: Math.round(tfidfScore(content, jdText) * 100),
+      score: Math.round(tfidfScore(content, referenceText) * 100),
     }))
     .sort((a, b) => b.score - a.score)
+}
+
+/**
+ * Fraction of JD requirements TF-IDF mass that is covered by resume tokens,
+ * in [0, 1]. Returns 0.5 (neutral) when inputs are empty.
+ *
+ * Uses the same hand-rolled TF-IDF as tfidfScore but measures coverage
+ * (how much of the JD's term mass does the resume address?) rather than
+ * symmetric cosine similarity.
+ */
+export function requirementsCoverage(
+  resumeText: string,
+  requirementsText: string,
+): number {
+  if (!resumeText.trim() || !requirementsText.trim()) return 0.5
+
+  const reqTokens = tokenize(requirementsText)
+  const resumeTokens = tokenize(resumeText)
+  const resumeSet = new Set(resumeTokens)
+
+  // Build TF-IDF weights for requirements text only
+  const reqTF = buildTF(reqTokens)
+
+  // IDF computed over a two-doc corpus (requirements + resume) to match sklearn semantics
+  const allVocab = new Set([...reqTokens, ...resumeTokens])
+  const resumeTF = buildTF(resumeTokens)
+
+  let totalMass = 0
+  let coveredMass = 0
+
+  for (const term of allVocab) {
+    const df = (reqTF.has(term) ? 1 : 0) + (resumeTF.has(term) ? 1 : 0)
+    const idf = Math.log(2 / df)
+    const reqWeight = (reqTF.get(term) ?? 0) * idf
+
+    totalMass += reqWeight
+    if (resumeSet.has(term)) {
+      coveredMass += reqWeight
+    }
+  }
+
+  if (totalMass === 0) return 0.5
+  return Math.min(1, coveredMass / totalMass)
 }
 
 export function keywordGap(resumeText: string, jdText: string): string[] {

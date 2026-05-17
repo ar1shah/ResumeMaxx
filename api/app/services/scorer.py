@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 
 def tfidf_score(doc_a: str, doc_b: str) -> float:
@@ -30,7 +31,7 @@ def tfidf_score(doc_a: str, doc_b: str) -> float:
 
 
 def score_sections(sections: dict[str, str], jd_text: str) -> list[dict]:
-    """Score each detected resume section against the full job description."""
+    """Score each detected resume section against a reference text (usually requirements)."""
     results = []
     for section, content in sections.items():
         if len(content.strip()) < 20:
@@ -38,6 +39,42 @@ def score_sections(sections: dict[str, str], jd_text: str) -> list[dict]:
         score = round(tfidf_score(content, jd_text) * 100)
         results.append({"section": section, "score": score})
     return sorted(results, key=lambda x: x["score"], reverse=True)
+
+
+def requirements_coverage(resume_text: str, requirements_text: str) -> float:
+    """Fraction of JD requirements TF-IDF mass that is covered by resume tokens.
+
+    Unlike symmetric cosine similarity, this metric asks: "how much of what the
+    job demands does the resume address?" — a better proxy for recruiter fit.
+
+    Returns a value in [0, 1]. Returns 0.5 (neutral) on empty inputs so the
+    composite score is not dragged down when requirements can't be extracted.
+    """
+    if not requirements_text.strip() or not resume_text.strip():
+        return 0.5
+
+    vectorizer = TfidfVectorizer(
+        lowercase=True,
+        strip_accents="unicode",
+        stop_words="english",
+        ngram_range=(1, 1),
+        sublinear_tf=True,
+        min_df=1,
+    )
+    try:
+        vectorizer.fit([requirements_text])
+        jd_vec: np.ndarray = vectorizer.transform([requirements_text]).toarray()[0]
+        resume_vec: np.ndarray = vectorizer.transform([resume_text]).toarray()[0]
+    except ValueError:
+        return 0.5
+
+    total_mass = float(jd_vec.sum())
+    if total_mass == 0:
+        return 0.5
+
+    # Sum JD term weights where the resume also has a non-zero score for that term
+    covered_mass = float(np.sum(jd_vec[resume_vec > 0]))
+    return min(1.0, covered_mass / total_mass)
 
 
 def keyword_gap(resume_text: str, jd_text: str) -> list[str]:

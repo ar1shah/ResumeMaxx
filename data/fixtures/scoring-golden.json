@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "id": "strong_match",
+      "description": "Strong full-stack developer candidate matching a full-stack JD - 8/11 signals, 3 nice-to-have gaps",
+      "expected_min": 78,
+      "expected_max": 92,
+      "resume": "Jane Smith\nSan Francisco, CA | jane@example.com\n\nSummary\nFull-stack software engineer with 4 years of experience building scalable web applications. Strong background in Python, Node.js, and React. Experienced with cloud infrastructure on AWS.\n\nExperience\nSoftware Engineer - Acme Corp (2021-present)\n- Designed and shipped REST APIs using Python and Node.js serving 500k daily requests\n- Built React dashboards integrated with GraphQL-free REST endpoints, reducing load time by 40%\n- Deployed microservices to AWS Lambda, S3, and EC2 using Docker containers\n- Maintained PostgreSQL databases with 99.9% uptime across 3 production environments\n- Established CI/CD pipelines using GitHub Actions; code coverage improved from 60% to 90%\n- Collaborated in Agile/Scrum sprints, participating in sprint planning, standups, and retrospectives\n- Used Git for version control across a team of 8 engineers\n\nJunior Engineer - Beta Inc (2019-2021)\n- Built internal Python tooling for data processing pipelines\n- Contributed to React front-end features for customer portal\n\nEducation\nB.S. Computer Science - State University (2019)\n\nSkills\nPython, Node.js, React, AWS (Lambda, S3, EC2), PostgreSQL, Docker, Git, CI/CD, Agile, Scrum, REST APIs, JavaScript, TypeScript",
+      "jd": "Full-Stack Software Engineer\n\nAbout the Role\nWe are building the next generation of developer tooling and are looking for a talented Full-Stack Engineer to join our team.\n\nResponsibilities\n- Build and maintain scalable backend services\n- Develop React-based front-end features\n- Collaborate with the product team in an Agile environment\n\nRequirements\n- 3-5 years of professional software engineering experience\n- Proficiency in Python and Node.js\n- Experience with React for front-end development\n- Hands-on experience with AWS services (Lambda, S3, EC2)\n- Strong knowledge of PostgreSQL\n- Familiarity with Docker, Git, and CI/CD pipelines\n- Experience working in Agile/Scrum teams\n\nNice to Have\n- Experience with GraphQL\n- Kubernetes or container orchestration experience\n- Prior startup experience\n\nAbout Us\nWe are a well-funded startup transforming the developer experience. We offer competitive salaries, equity, and great benefits.\n\nBenefits\n- Competitive salary and equity\n- Health, dental, and vision insurance\n- Unlimited PTO\n\nEqual Opportunity\nWe are an equal opportunity employer and value diversity."
+    },
+    {
+      "id": "weak_match",
+      "description": "Chef resume vs software engineering JD - completely unrelated",
+      "expected_min": 0,
+      "expected_max": 35,
+      "resume": "Mario Rossi\nNew York, NY\n\nSummary\nExecutive chef with 12 years of experience in fine dining and Michelin-starred restaurants.\n\nExperience\nHead Chef - Le Bistro Paris, New York (2018-present)\n- Designed seasonal menus featuring classic French cuisine\n- Managed kitchen staff of 15 cooks and prep chefs\n- Supervised food procurement, quality control, and inventory\n- Introduced sourdough bread and artisan pastry program\n- Reduced food waste by 20% through portion control initiatives\n\nSous Chef - The Grand Hotel, Boston (2012-2018)\n- Assisted head chef with menu development and staff training\n- Specialized in pastry and baking - croissants, macarons, tarts\n\nEducation\nCulinary Arts Degree - Culinary Institute of America (2012)\n\nSkills\nFrench cuisine, pastry, baking, yeast fermentation, sourdough, kitchen management, food safety, inventory management, staff training",
+      "jd": "Full-Stack Software Engineer\n\nAbout the Role\nWe are building the next generation of developer tooling and are looking for a talented Full-Stack Engineer to join our team.\n\nResponsibilities\n- Build and maintain scalable backend services\n- Develop React-based front-end features\n- Collaborate with the product team in an Agile environment\n\nRequirements\n- 3-5 years of professional software engineering experience\n- Proficiency in Python and Node.js\n- Experience with React for front-end development\n- Hands-on experience with AWS services (Lambda, S3, EC2)\n- Strong knowledge of PostgreSQL\n- Familiarity with Docker, Git, and CI/CD pipelines\n- Experience working in Agile/Scrum teams\n\nNice to Have\n- Experience with GraphQL\n- Kubernetes or container orchestration experience\n- Prior startup experience\n\nAbout Us\nWe are a well-funded startup transforming the developer experience."
+    },
+    {
+      "id": "skills_only_thin_resume",
+      "description": "All required skills present but minimal resume - short, few bullets, no years mentioned",
+      "expected_min": 55,
+      "expected_max": 80,
+      "resume": "Alex Lee\n\nSummary\nSoftware developer.\n\nExperience\nEngineer - Some Company\n- Python, Node.js, React, AWS, PostgreSQL, Docker, Git\n\nSkills\nPython, Node.js, React, PostgreSQL, Docker, Git, AWS, CI/CD, Agile",
+      "jd": "Full-Stack Software Engineer\n\nRequirements\n- Proficiency in Python and Node.js\n- Experience with React for front-end development\n- AWS services knowledge\n- PostgreSQL\n- Docker, Git, CI/CD\n- Agile experience\n\nNice to Have\n- GraphQL\n- Kubernetes"
+    }
+  ]
+}

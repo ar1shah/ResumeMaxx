@@ -15,7 +15,8 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
-import type { HistoryEntry } from '@/types/analysis'
+import { getScoreColors } from '@/lib/score-colors'
+import type { HistoryEntry, ScoreBreakdown } from '@/types/analysis'
 
 function ResultSkeleton() {
   return (
@@ -24,6 +25,53 @@ function ResultSkeleton() {
       <Skeleton className="h-64 w-full" />
       <Skeleton className="h-40 w-full" />
     </div>
+  )
+}
+
+interface BreakdownBarProps {
+  label: string
+  value: number
+  weight: string
+}
+
+function BreakdownBar({ label, value, weight }: BreakdownBarProps) {
+  const { hex } = getScoreColors(value)
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">
+          {Math.round(value)}
+          <span className="text-muted-foreground text-xs ml-0.5">/100</span>
+        </span>
+      </div>
+      <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+          style={{ width: `${value}%`, backgroundColor: hex }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">{weight} of overall score</p>
+    </div>
+  )
+}
+
+function ScoreBreakdownCard({ breakdown }: { breakdown: ScoreBreakdown }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Score breakdown</CardTitle>
+        <CardDescription>
+          How each component contributes to your overall match score
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <BreakdownBar label="Skill fit" value={breakdown.skillFit} weight="40%" />
+        <BreakdownBar label="Requirements coverage" value={breakdown.lexicalCoverage} weight="30%" />
+        <BreakdownBar label="Experience alignment" value={breakdown.experienceFit} weight="15%" />
+        <BreakdownBar label="Section relevance" value={breakdown.sectionRelevance} weight="15%" />
+      </CardContent>
+    </Card>
   )
 }
 
@@ -80,7 +128,7 @@ function ResultsContent() {
 
       <Separator />
 
-      {/* Score + section scores */}
+      {/* Score ring + section chart */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="flex items-center justify-center p-6">
           <ScoreRing score={result.overallScore} />
@@ -95,6 +143,9 @@ function ResultsContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Composite score breakdown — shown when available (all new analyses) */}
+      {result.scoreBreakdown && <ScoreBreakdownCard breakdown={result.scoreBreakdown} />}
 
       {/* Skill gap */}
       <Card>
@@ -113,7 +164,9 @@ function ResultsContent() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Missing keywords</CardTitle>
-          <CardDescription>High-frequency JD terms not found in your resume, ranked by importance</CardDescription>
+          <CardDescription>
+            High-frequency JD terms not found in your resume, ranked by importance
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <KeywordChips keywords={result.missingKeywords} />

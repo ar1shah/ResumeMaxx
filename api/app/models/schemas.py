@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -30,6 +31,7 @@ class AnalysisResult(BaseModel):
     jd_skill_count: int = Field(alias="jdSkillCount")
     matched_skills: list[str] = Field(alias="matchedSkills")
     missing_skills: list[str] = Field(alias="missingSkills")
+    score_breakdown: dict[str, Any] | None = Field(default=None, alias="scoreBreakdown")
     created_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         alias="createdAt",

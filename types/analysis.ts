@@ -9,6 +9,13 @@ export interface SectionScore {
   score: number
 }
 
+export interface ScoreBreakdown {
+  skillFit: number
+  lexicalCoverage: number
+  experienceFit: number
+  sectionRelevance: number
+}
+
 export interface AnalysisResult {
   overallScore: number
   sectionScores: SectionScore[]
@@ -18,6 +25,7 @@ export interface AnalysisResult {
   jdSkillCount: number
   matchedSkills: string[]
   missingSkills: string[]
+  scoreBreakdown?: ScoreBreakdown
   createdAt: string
 }
 
