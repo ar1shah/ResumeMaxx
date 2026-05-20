@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
+import { NavLink } from '@/components/layout/NavLink'
 
 export function SiteHeader() {
   return (
@@ -11,19 +12,9 @@ export function SiteHeader() {
         >
           Resume<span className="text-primary">Maxx</span>
         </Link>
-        <nav className="flex items-center gap-5 text-sm text-muted-foreground">
-          <Link
-            href="/"
-            className="hover:text-foreground transition-colors"
-          >
-            Analyze
-          </Link>
-          <Link
-            href="/history"
-            className="hover:text-foreground transition-colors"
-          >
-            History
-          </Link>
+        <nav className="flex items-center gap-5 text-sm">
+          <NavLink href="/">Analyze</NavLink>
+          <NavLink href="/history">History</NavLink>
         </nav>
       </div>
       <Separator />
